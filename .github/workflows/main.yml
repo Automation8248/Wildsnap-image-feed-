@@ -1,0 +1,46 @@
+name: WildSnap Poster
+
+on:
+  schedule:
+    # 1, 4, 7, 10... tarikh ko chalega (Motivation wale ke sath ya alag)
+    # Agar alag din chalana hai to '0 6 */3 * *' kar dein (1 ghanta late)
+    - cron: '0 6 */3 * *' 
+  
+  workflow_dispatch: # Manual Button
+
+jobs:
+  wild-post:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # File delete karne ke liye zaroori hai
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Libraries
+        run: pip install requests
+
+      - name: Run Wild Poster
+        env:
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_TOKEN_WILDSNAP: ${{ secrets.TELEGRAM_TOKEN_WILDSNAP }}
+          WEBHOOK_WILDSNAP: ${{ secrets.WEBHOOK_WILDSNAP }}
+        run: python wild_poster.py
+
+      - name: Delete Used File from Repo
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Check karo kuch delete hua hai ya nahi
+          git add -u content/wildsnap/
+          
+          # Agar changes hain to commit & push karo
+          git commit -m "Auto: Removed used WildSnap file" || echo "No files to delete"
+          git push
